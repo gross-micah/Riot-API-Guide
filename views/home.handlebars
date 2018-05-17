@@ -1,0 +1,41 @@
+<div class="outline">
+  <a href="/"><button type="button">Setup</button></a>
+  <a href="/retrieve"><button type="button">Parsing Data</button></a>
+  <a href="/combo"><button type="button">Combining API calls</button></a>
+</div>
+<div class="mainText">
+ <h1 style="color:white">Getting started with the League of Legends API</h1>
+ <p style="color:white">This is a guide to help get you started with Riot’s API for <em>League of Legends</em>. The full API can be found <a href="https://developer.riotgames.com/api/methods">here</a>. With this guide, you should be able to get things setup quickly and, more importantly, understand next steps and possible options for how to best implement things. The focus is on seeing progress--not getting flustered--and always seeing a path forward.
+</p>
+ <p style="color:white">Riot provides a brief <a href="https://developer.riotgames.com/docs/getting-started">guide</a> with the information you need to hit the API and get a valid response. Let's With your League of Legends account and API key in hand, you can launch the command line or terminal and paste in the first command from Riot's guide</p>
+<pre class="prettyprint" id="terminal">
+  curl --request GET 'https://na.api.pvp.net/api/lol/na/v1.4/summoner/by-name/RiotSchmick?api_key=&ltkey&gt' --include
+</pre>
+<p style="color:white">You should receive a response that looks like the text below. If you're not familiar with the return data, <a href="http://json.org">this link</a> provides a starting point for understanding JSON objects.</p>
+<pre class="prettyprint">
+HTTP/1.1 200 OK
+Content-Type: application/json;charset=utf-8
+Vary: Accept-Encoding
+X-Rate-Limit-Count: 1:10,1:600
+Content-Length: 119
+Connection: keep-alive
+
+{"riotschmick":{"id":585897,"name":"RiotSchmick","profileIconId":1445,"revisionDate":1488441394000,"summonerLevel":30}}
+</pre>
+<p style="color:white">The body of the response is what we're interested in. The object 'riotschmick' brings us 'name:value' attributes related to this particular API call. Now that we have that data, how can we use it for a web app or page? First thing you'll want to do is setup a local environment on your computer. For the simplest route, you can create a folder for your project and an index.html file as shown in this great <a href="https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Set_up_a_basic_working_environment">Mozilla guide</a>. Want to try it with different tools? Now is always a good time to familiarize yourself with <a href="https://nodejs.org/">Node.js</a>. To do so, you will need to</p>
+<h3 style="color:white">Local Node.JS Initialization</h3>
+<ol style="color:white">
+  <li>Download and install <a href="https://nodejs.org/">Node.js</a></li>
+  <li>Create a folder or location from which you will build your web application. For example, ~/Desktop/myLocalProject</li>
+  <li>Create a file to run the service. Most commonly you can just nampe the empty file as 'server.js'</li>
+  <li>From your command line, navigate to the folder holding your 'server.js' and run
+  <pre class="prettyprint" id="code">
+  node server.js</pre></li>
+  <li>Depending on how you build your website and what you save in 'server.js', you'l neeed to use Javascript's node package manager (<a href="https://www.npmjs.com/">npm</a>) to install additional packages. Remember to run the installs from your command line that is currently pointed to your project folder. Say you decide to build your application using express and express-handlebars. In that case your install commands might end up looking like this: by<pre class="prettyprint" id="code">
+npm install --save express
+npm install epress-handlebars
+npm install request
+npm install async
+</pre></li></li>
+<p style="color:white">Now that we have confirmed access to the API and a local environment from which to build and test, let's work on pulling values out of the returned JSON from Riot.</p>
+<a href="/retrieve"><button type="button">Next: Parsing Data</button</a>

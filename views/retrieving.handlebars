@@ -1,0 +1,101 @@
+<div class="outline">
+  <a href="/"><button type="button">Setup</button></a>
+  <a href="/retrieve"><button type="button">Parsing Data</button></a>
+  <a href="/combo"><button type="button">Combining API calls</button></a>
+</div>
+<div class="mainText">
+ <h1 style="color:white">Pulling Data From The API</h1>
+ <p style="color:white">We have our mise en scene set and we're ready to start leveraging the API for good and occassional evil. Let's start with pulling out attributes relating to a summoner. We're going to parse and display the results we want in an unordered list. If you're rendering your page with node, <a href="https://expressjs.com/en/starter/hello-world.html">this</a> site can help guide you through implementation.
+</p>
+<h3 style="color:white">Path, Value, And Key Go Together In Harmony</h3>
+<p style="color:white">Recall back to Riot's initial example to see results in the command line:</p>
+<pre class="prettyprint" id="terminal">
+  curl --request GET 'https://na.api.pvp.net/api/lol/na/v1.4/summoner/by-name/RiotSchmick?api_key=&ltkey&gt' --include
+</pre>
+<p style="color:white">Full details of this particular method are available <a href="https://developer.riotgames.com/api/methods#!/1221/4746">here</a>. Riot API uses GET requests (more info <a href="https://www.w3schools.com/tags/ref_httpmethods.asp">here</a>)Every API call has 3 properties you have to manage</p>
+<ol style="color:white">
+  <li>Path- this is the URL for the particular API call. The template version of the call above is  https://na.api.pvp.net/api/lol/na/v1.4/summoner/by-name/{summonerName}. The brackets represent the query sent to Riot which leads to the next core property:</li>
+  <li>Value- this is the data sent to Riot in order to retrieve a result. In the case of this API call, we send in text as {summonerName}, the API then looks up a check in Riot's database and returns related values if a match is found. The only way to get any data back from Riot is to submit the GET with a...</li>
+  <li>Valid API Key- In order for Riot to authenticate the API request and prevent abuse or malicious intent, you must send your API key along with any GET request.<em>Note:</em>If you ever forget or need to replace your API key, you can find it by logging in and accessing Riot's <a href="https://developer.riotgames.com/">Developer Dashboard</a>. The key gets appended to the call + value by concatenating call + value + <q>?api_key=&ltkey&gt'</q></li> where you replace the angled brackets and key with the actual key given to you by Riot.
+</ol>
+<p style="color:white">Let's put all this knowledge to work to render a page that separates the name, ID, and level values of a summoner search and displays it on screen. For the example, I'll be usiing Node.js, express, express-handlebars, async, and waterfall to render pages and handle asynchronous calls. There are a ton of ways you can manage asynchronous calls. Google around or visit blogs like <a href="https://blog.domenic.me/youre-missing-the-point-of-promises/">this</a> or <a href="http://blog.vullum.io/javascript-flow-callback-hell-vs-async-vs-highland/">that</a> to give you an idea of other possible methods.</p>
+<pre class="prettyprint">
+  app.get('/search',function(req,res){
+    var data = {};
+    var api_key = 'PLACE-HOLDER-DONT-PUBLICALLY-SHARE-KEYS';
+    var summonerName = riotschmick;
+    var URL = 'https://na.api.pvp.net/api/lol/na/v1.4/summoner/by-name/' + summonerName + '?api_key=' + api_key;
+    ...
+</pre>
+<p style="color:white">What's going on with this code? First we're creating a variable <q>data</q> that we will store our response in. We then assign variables for the api key and summoner name we're searching for, respectively. the URL variable combines path, value, and key into one GET request. It's better to break them down now, so when you possibly add additional API calls or modify search values it's easier to update later. Now let's actually fetch the data and store in our <q>data</q> variable.</p>
+<pre class="prettyprint">
+  app.get('/search',function(req,res){
+    var data = {};
+    var api_key = 'PLACE-HOLDER-DONT-PUBLICALLY-SHARE-KEYS';
+    var summonerName = riotschmick;
+    var URL = 'https://na.api.pvp.net/api/lol/na/v1.4/summoner/by-name/' + summonerName + '?api_key=' + api_key;
+    async.waterfall([
+      function(callback) {
+        var jsonData = JSON.parse(body);
+        request(URL, function(err, response, body) {
+          if(jsonData != null) {
+            data.id = jsonData[summonerName].id;
+            data.name = jsonData[summonerName].name;
+            data.level = jsonData[summonerName].summonerLevel;
+            callback(null, data);
+          }
+          else {
+            console.log(err);
+          }
+        });
+      }
+    ],
+    function(err, data) {
+      if(err) {
+        console.log(err);
+        return;
+      }
+
+      res.render('home', {data});
+    });
+});
+</pre>
+<p style="color:white">Pretty? No. Functional? Yes. Again links above can show you cleaner ways to manage asynchronous calls. Let's focus on the two critical parts of this.</p>
+<pre class="prettyprint">
+request(URL, function(err, response, body) {
+  jsonData = JSON.parse(body);
+  if(jsonData != null) {
+    data.id = jsonData[summonerName].id;
+    data.name = jsonData[summonerName].name;
+    callback(null, data);
+  }
+  ...
+</pre>
+<p style="color:white">we make a request to the URL we set as our API call. If there is no error and the server status code reported by Riot equals 200 (Meaning a successful search execution for us) then we will parse the data returned to us in the body of the results. If anything above looks unfamiliar, search for elements of the code online for more comprehension. We create a local variable jsonData to store the response body. From this variable, we can parse out the separate values using the notation above. <q>data.id = jsonData[summonerName].id</q> in effect creates a name attribute <q>id</q> on the data object, then sets its value equal to that of <q>jsonData[summonerName].id</q>. The notation may look familiar to you as array indexing. That's because this particular API call allows us to search multiple summoner names at once. Each summoner name has their own values encased in brackets. For example, the raw data returned when I search for summoners <q>riotschmick,grossmicah</q> yields<p>
+<pre  class="prettyprint">
+{"grossmicah":
+  {"id":81691476,"name":"grossmicah","profileIconId":21,"revisionDate":1483226239000,"summonerLevel":15},
+"riotschmick":
+  {"id":585897,"name":"RiotSchmick","profileIconId":1445,"revisionDate":1488441394000,"summonerLevel":30}
+</pre>
+<p style="color:white">The attributes for each different summoner name is nested in its own curly brackets. We now have pulled out data we wanted on the server side of things, but how do we display it? This example uses handlebars and the relevant code is at the very bottom
+<pre class="prettyprint">
+res.render('home', {data});
+</pre>
+<p style="color:white">We take the response from the server, render it using my <q>home.handlebars</q> file, and send our {data} along with it. In this <q>home</q> file has the following snippet of code which displays an unordered list that gets populated by the information contained in <q>data</q>.</p>
+<pre class="prettyprint">
+  &ltul>
+      &ltli&gtSummoner: &#123&#123data.name&#125&#125&lt/li&gt
+      &ltli&gtID: &#123&#123data.id&#125&#125&lt/li&gt
+      &ltli&gtLevel: &#123&#123data.level&#125&#125&lt/li&gt
+  &lt/ul&gt
+</pre>
+<p style="color:white">With the final result looking like</p>
+<ul style="color:white">
+    <li>Summoner: grossmicah</li>
+    <li>ID: 81691476</li>
+    <li>Level: 15</li>
+</ul>
+<p style="color:white">We now have results from the API, gathered by our server and displayed on your web page. Next we'll explore leveraging multiple API calls and retrieving nested data.</p>
+
+<a href="/combo"><button type="button">Next: Combining API Calls</button</a>

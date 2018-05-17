@@ -1,0 +1,64 @@
+<div class="outline">
+  <a href="/"><button type="button">Setup</button></a>
+  <a href="/retrieve"><button type="button">Parsing Data</button></a>
+  <a href="/combo"><button type="button">Combining API calls</button></a>
+</div>
+<div class="mainText">
+  <h1 style="color:white">API Implementations</h1>
+
+  <p style="color:white">Now lets implement something that could be very useful if you play <em>League of Legends</em>. I want a a quick lookup function where I can enter a user's name and get a sense of how good or bad the player is in game. Exploring the API's available, <a href="https://developer.riotgames.com/api/methods#!/1221/4746">this</a> one seems pretty useful. The method needs a summoner ID, season, and region to execute. As we saw on the previous page, we get the id back when we look up a user's name. We just need to chain the results of that query and use them in this second method to give us a better sense of who we're dealing with. To simplify the example, I'm taking as assumptions that we're interested in the North America region, and I'm interested in the particular values for one of the top 20 players in this region, per <a href="http://www.lolesports.com/en_US/featured/top20">leagueofgraphs.com</a>: mulgokizary. Clicking submit will give us his up to date stats for the 2017 season.</p>
+  <div>
+    <h4 style="color:white">Summoner Lookup: mulgokizary</h4>
+    <form action="/search">
+      <label for="Summoner"></label>
+      <input type="submit" id="summonerSubmit" name="submit">
+    </form>
+  </div>
+  <div class="results">
+    <ul style="color:white">
+        <li>Summoner: {{data.name}}</li>
+        <li>ID: {{data.id}}</li>
+        <li>Level: {{data.level}}</li>
+        <li>Wins Unranked: {{data.unranked}}</li>
+        <li>Ranked Solo 5x5 Wins: {{data.win}}</li>
+        <li>Ranked Solo 5x5 Losees: {{data.loss}}</li>
+    </ul>
+  </div>
+  <p style="color:white">He does seem to win more than he loses, and wastes no time in unranked play. Good to know. The JSON returned by the 2nd api call yield </p>
+  <pre class="prettyprint">
+jsonData { summonerId: 29161654,
+      playerStatSummaries:
+       [ { playerStatSummaryType: 'CoopVsAI',
+           wins: 85,
+           modifyDate: 1481111932000,
+           aggregatedStats: [Object] },
+         { playerStatSummaryType: 'CoopVsAI3x3',
+           wins: 1,
+           modifyDate: 1481111932000,
+           aggregatedStats: [Object] },
+         { playerStatSummaryType: 'Unranked3x3',
+           wins: 0,
+           modifyDate: 1481111932000,
+           aggregatedStats: {} },
+         { playerStatSummaryType: 'Unranked',
+           wins: 137,
+           modifyDate: 1484963528000,
+           aggregatedStats: [Object] },
+  ...
+  </pre>
+  <p style="color:white">To get at the relevant values in the nested braces, you will need to be careful with your syntax. To add these to a an object named <q>"data</q>, you could write</p>
+  <pre class="prettyprint">
+data.unranked = jsonData.playerStatSummaries[4].wins;
+data.win = jsonData['playerStatSummaries'][7].wins;
+data.loss = jsonData['playerStatSummaries'][7].losses;
+  </pre>
+  <p style="color:white">A visual comparison confirms the 4th bracketed entry does list as <q>unranked.</q> <em>Note:</em> When implementing a method like this, be mindful that ordering and number of game types may change dynamically. Additionally, you cannot assume ordering or parsing will be the same across regions, so if you're aiming globally ensure that your array conscription is properly numbered for every unique region. If you're getting networking errors and not seeing the results you expect, use the console log and insert lines to see if your syntax is actually accessing anything.</p>
+  <pre class="prettyprint">
+  console.log(jsonData);
+  console.log(jsonData.playerStatSummaries);
+  console.log(jsonData.playerStatSummaries[1]);
+  </pre>
+  <p style="color:white">Additional best practices would be to validate the query you submit is a valid combination of characters. The Riot getting started <a href="https://developer.riotgames.com/docs/getting-started">guide</a> goes into detail on this at the bottom of the page. Keep up to date with revisions to the API so your web app does not break.</p>
+  <h3 style="color:white">Do It Yourself</h3>
+  <p style="color:white">You now have all the basic building blocks and bread crumb trails of links you need to put the Riot API to good use. When in doubt, Stackoverflow and Google will probably have people asking similar questions. Embrace the community.</p>
+</div>
