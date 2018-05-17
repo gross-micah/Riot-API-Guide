@@ -2,12 +2,10 @@ var express = require('express');
 
 var app = express();
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
-//var bodyParser = require('body-parser');
 var request = require('request');
 var async = require('async');
 
-//app.use(bodyParser.urlencoded({ extended: false }));
-//app.use(bodyParser.json());
+app.use('/css', express.static(__dirname + '/public'));
 
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
@@ -17,27 +15,52 @@ app.get("/", function(req, res){
   res.render('home');
 });
 
+app.get("/retrieve", function(req, res){
+  res.render('retrieving');
+});
+
+app.get("/combo", function(req, res){
+  res.render('combo');
+});
+
+
 app.get('/search',function(req,res){
   var data = {};
   var api_key = 'RGAPI-0d32ab4f-6f00-46c5-9242-7c13bef2b141';
-  var summonerName = req.query.summoner.toLowerCase();
-
+  var summonerName = 'mulgokizary';
   var URL = 'https://na.api.pvp.net/api/lol/na/v1.4/summoner/by-name/' + summonerName + '?api_key=' + api_key;
 
   async.waterfall([
     function(callback) {
       request(URL, function(err, response, body) {
-        if(!err && response.statusCode == 200) {
-          var jsonData = JSON.parse(body);
+        jsonData = JSON.parse(body);
+        if(jsonData != null) {
           data.id = jsonData[summonerName].id;
           data.name = jsonData[summonerName].name;
-          data.level = jsonData[summonerName].summonerLevel
-          data.revisionDate = jsonData[summonerName].revisionDate;
+          data.level = jsonData[summonerName].summonerLevel;
           callback(null, data);
         }
-        else {
+        else
+        {
           console.log(err);
         }
+      });
+    },
+    function (data, callback) {
+      var URL = 'https://na.api.pvp.net/api/lol/na/v1.3/stats/by-summoner/29161654/summary?season=SEASON2017&api_key=RGAPI-0d32ab4f-6f00-46c5-9242-7c13bef2b141';
+      request(URL, function(err, response, body) {
+        jsonData = JSON.parse(body);
+        if (jsonData !=null) {
+
+          data.unranked = jsonData.playerStatSummaries[4].wins;
+          data.win = jsonData['playerStatSummaries'][7].wins;
+          data.loss = jsonData['playerStatSummaries'][7].losses;
+          callback(null, data);
+      }
+      else
+      {
+        console.log('bad job chaining');
+      }
       });
     }
   ],
@@ -47,32 +70,11 @@ app.get('/search',function(req,res){
       return;
     }
 
-    res.render('home', {data});
+    res.render('combo', {data});
   });
 });
 
 
-
-
-app.get('/formshw',function(req,res){
-  var passedData = [];
-  for (var d in req.query){
-    passedData.push({'name':d,'value':req.query[d]})
-  }
-  var context = {};
-  context.infoDump = passedData;
-  res.render('gethw', context);
-});
-
-app.post('/formshw', function(req,res){
-  var passedData = [];
-  for (var d in req.body){
-    passedData.push({'name':d,'value':req.body[d]})
-  }
-  var context = {};
-  context.infoDump = passedData;
-  res.render('posthw', context);
-});
 
 app.use(function(req,res){
   res.status(404);
